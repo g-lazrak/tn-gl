@@ -5,6 +5,7 @@ sys.path.append('/mnt/D484FDE484FDC94E/Documents/StageTN/TensorNetwork/peps-torc
 import torch
 import tensors.tensors_D4_R3
 import tensors.tensors_D4_R5
+import tensors.tensors_D4_R5_Cs
 import ipeps.ipeps as ipeps
 import ipeps.ipeps_c4v as ipepsc4v
 path = '/mnt/D484FDE484FDC94E/Documents/StageTN/TensorNetwork/tn-gl/tensors/'
@@ -51,21 +52,21 @@ def build_A_tensor(coef_list):
 def contract_B_cs():
     """Return the list of the 8 basic c4v Ta tensors.
     """
-    tensor_Ta_list = []
-    for tensor in tensors.tensors_D4_R5.list_S0:
-        tensor_Ta_list.append(contract_Ta(tensors.tensors_D4_R3.T_2_B_1, tensor))
-    for tensor in tensors.tensors_D4_R5.list_S1:
-        tensor_Ta_list.append(contract_Ta(tensors.tensors_D4_R3.T_2_A_1, tensor))
-    return tensor_Ta_list
+    tensor_Tb_list = []
+    for tensor in tensors.tensors_D4_R5_Cs.list_S0:
+        tensor_Tb_list.append(contract_Ta(tensors.tensors_D4_R3.T_2_B_1, tensor))
+    for tensor in tensors.tensors_D4_R5_Cs.list_S1:
+        tensor_Tb_list.append(contract_Ta(tensors.tensors_D4_R3.T_2_A_1, tensor))
+    return tensor_Tb_list
 
 
 def build_Tb_tensors():
-    """Build the .json file of the 13 Tb tensors c4v-sym for the peps-torch CTM.
+    """Build the .json file of the 13 Tb tensors cs-sym for the peps-torch CTM.
     """
     tensor_Tb_list = contract_B_cs()
     for i in range(len(tensor_Tb_list)):
         tensor = tensor_Tb_list[i].view(4,4,4,4,4).contiguous()
-        ipeps.write_ipeps(ipepsc4v.IPEPS_C4V(tensor),path+f"input-states/tensor_Tb{i}.json")
+        ipeps.write_ipeps(ipeps.IPEPS({(0,0): tensor}),path+f"input-states/tensor_Tb{i}.json")
 
 
 def build_B_tensor(coef_list):
@@ -74,9 +75,10 @@ def build_B_tensor(coef_list):
     B_tensor = torch.zeros([4,4,4,4,4], dtype=torch.float64)
     for i in range(len(coef_list)):
         tensor_Tb = ipeps.read_ipeps(path+f"input-states/tensor_Tb{i}.json")
-        B_tensor += coef_list[i]*tensor_Tb.site()
-    ipeps.write_ipeps(ipepsc4v.IPEPS_C4V(B_tensor),path+"input-states/B_tensor.json")
+        B_tensor += coef_list[i]*tensor_Tb.site(coord=(0,0))
+    ipeps.write_ipeps(ipeps.IPEPS({(0,0): B_tensor}),path+"input-states/B_tensor.json")
     return B_tensor
+
 
 ### BUILDING IPEPO TENSORS
 
@@ -120,3 +122,4 @@ def build_E(X_tensor):
     
 if __name__ == '__main__':
     build_Ta_tensors()
+    build_Tb_tensors()
